@@ -1,0 +1,40 @@
+# E:\Fitness-ai-backend\app\schemas\exercise.py
+
+from pydantic import BaseModel, Field
+from typing import Optional, Dict, Any
+from datetime import datetime
+
+# 创建运动记录请求
+class ExerciseRecordCreate(BaseModel):
+    exercise_id: int
+    score: float = Field(ge=0, le=100, description="动作评分 0-100")
+    count: int = Field(ge=0, description="完成次数")
+    duration: int = Field(ge=0, description="时长 (秒)")
+    heart_rate_avg: Optional[float] = None
+    heart_rate_max: Optional[float] = None
+    keypoints_data: Optional[Dict[str, Any]] = None
+    feedback: Optional[str] = None
+
+# 运动记录响应
+class ExerciseRecordResponse(BaseModel):
+    id: int
+    exercise_id: int
+    score: float
+    count: int
+    duration: int
+    heart_rate_avg: Optional[float]
+    feedback: Optional[str]
+    created_at: datetime
+    
+    class Config:
+        from_attributes = True
+
+# 标准动作响应
+class ExerciseResponse(BaseModel):
+    id: int
+    name: str
+    category: Optional[str]
+    description: Optional[str]
+    
+    class Config:
+        from_attributes = True
