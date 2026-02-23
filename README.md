@@ -19,6 +19,7 @@
 │   ├── api/
 │   │   ├── auth.py          # 认证接口（注册/登录）
 │   │   ├── exercise.py      # 运动接口（动作库/记录）
+│   │   ├── stats.py         # 数据统计接口
 │   ├── models/
 │   │   ├── _init_.py
 │   │   ├── user.py          # 用户数据模型
@@ -27,6 +28,7 @@
 │   │   ├── _init_.py
 │   │   ├── user.py          # 用户数据验证
 │   │   ├── exercise.py      # 运动数据验证
+│   │   ├── stats.py         # 数据统计模型
 │   └── utils/
 │       └── security.py      # 密码加密/JWT/认证
 ├── _init_db.py               # 数据库初始化脚本
