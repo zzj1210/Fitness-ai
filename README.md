@@ -32,6 +32,7 @@
 ├── _init_db.py               # 数据库初始化脚本
 ├── seed_data.py             # 测试数据种子脚本
 ├── requirements.txt         # 依赖列表
+├── td.py                    # 数据库连接测试
 └── .gitignore
 ```
 
