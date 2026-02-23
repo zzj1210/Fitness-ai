@@ -4,6 +4,8 @@ from app.database import SessionLocal, engine
 from app.models.exercise import Exercise
 from app.models.user import User
 
+
+
 def seed_exercises():
     db = SessionLocal()
     try:

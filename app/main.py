@@ -2,7 +2,7 @@
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api import auth, exercise
+from app.api import auth, exercise,stats
 
 app = FastAPI(
     title="体适能AI管家 API",
@@ -22,6 +22,7 @@ app.add_middleware(
 # 注册路由
 app.include_router(auth.router, prefix="/api/auth", tags=["认证"])
 app.include_router(exercise.router, prefix="/api/exercise", tags=["运动"])
+app.include_router(stats.router,prefix="/api/stats",tags=["统计"])
 
 @app.get("/")
 def root():
