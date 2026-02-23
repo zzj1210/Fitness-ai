@@ -1,0 +1,118 @@
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File  
+from fastapi.responses import FileResponse 
+from sqlalchemy.orm import Session  
+from typing import Optional  
+import os  
+import uuid  
+import shutil  
+from app.database import get_db  
+from app.models.exercise import ExerciseRecord  
+from app.models.user import User 
+from app.utils.security import get_current_user 
+
+router = APIRouter() 
+
+UPLOAD_DIR = "uploads/videos"  # 定义视频上传目录路径
+os.makedirs(UPLOAD_DIR, exist_ok=True)  # 创建目录，如果不存在则创建，exist_ok=True 表示已存在不报错
+
+ALLOWED_EXTENSIONS = {".mp4", ".avi", ".mov", ".mkv"}  # 允许上传的视频格式集合
+MAX_FILE_SIZE = 50 * 1024 * 1024  # 最大文件大小 50MB
+
+@router.post("/records/{record_id}/video")  # 定义 POST 路由，record_id路径参数
+def upload_video(  # 定义上传视频函数
+    record_id: int,  # 运动记录 ID，从 URL 路径获取
+    video: UploadFile = File(...),  # 上传的文件对象，File(...) 表示必填
+    keep_video: bool = True,  # 是否保留视频，默认 True（保留）
+    db: Session = Depends(get_db),  # 数据库会话，Depends 自动注入
+    current_user: User = Depends(get_current_user)  # 当前登录用户，自动从 JWT 令牌获取
+):
+    # 验证文件扩展名是否允许
+    file_ext = os.path.splitext(video.filename)[1].lower()  # 获取文件扩展名并转小写
+    if file_ext not in ALLOWED_EXTENSIONS:  # 检查扩展名是否在允许列表中
+        raise HTTPException(status_code=400, detail="不支持的视频格式")  # 抛出 400 错误
+    
+    # 验证文件大小（读取部分内容估算）
+    video.file.seek(0, 2)  # 移动文件指针到末尾，2 表示从文件末尾开始
+    file_size = video.file.tell()  # 获取文件大小
+    video.file.seek(0) 
+    if file_size > MAX_FILE_SIZE:  # 检查文件大小是否超限
+        raise HTTPException(status_code=400, detail="文件大小超过 50MB 限制")  # 抛出 400 错误
+    
+    # 检查运动记录是否存在且属于当前用户
+    record = db.query(ExerciseRecord).filter(  # 查询运动记录表
+        ExerciseRecord.id == record_id,  # 条件 1：记录 ID 匹配
+        ExerciseRecord.user_id == current_user.id  # 条件 2：属于当前用户（权限检查）
+    ).first()  # 获取第一条匹配记录
+    if not record:  # 如果记录不存在
+        raise HTTPException(status_code=404, detail="运动记录不存在")  # 抛出 404 错误
+    
+    # 生成唯一文件名，避免文件覆盖
+    unique_filename = f"{uuid.uuid4()}{file_ext}"  # UUID 生成唯一字符串 + 原扩展名
+    file_path = os.path.join(UPLOAD_DIR, unique_filename)  # 拼接完整文件路径
+    
+    # 保存文件到服务器
+    with open(file_path, "wb") as buffer:  # 以二进制写入模式打开文件
+        buffer.write(video.file.read())  # 读取上传文件内容并写入
+    
+    # 根据 keep_video 参数决定是否保留文件
+    if keep_video:  
+        record.video_url = f"/videos/{unique_filename}"  # 存储相对路径到数据库
+        video_deleted = False  # 标记视频未删除
+    else:  # 不保留视频（临时处理）
+        video_deleted = True  # 标记视频已删除
+        # 注意：这里先不删除，等 AI 分析完成后再删除
+        # 或者立即删除，只返回分析结果
+    
+    db.commit()  # 提交数据库事务，保存更改
+    db.refresh(record)  # 刷新记录对象，获取最新数据
+    
+    return {  # 返回成功响应
+        "message": "视频上传成功",  # 成功消息
+        "video_url": record.video_url if keep_video else None,  # 如果保留则返回路径，否则为 None
+        "file_size": file_size,  
+        "video_deleted": video_deleted,  #  返回视频是否被删除
+        "note": "视频仅用于临时分析，不会永久存储" if not keep_video else "视频已永久存储"  
+    }
+
+@router.delete("/records/{record_id}/video")  # 手动删除视频接口
+
+def delete_video(
+    record_id: int,  # 运动记录 ID
+    db: Session = Depends(get_db),  # 数据库会话
+    current_user: User = Depends(get_current_user)  # 当前用户
+):
+    # 查询记录
+    record = db.query(ExerciseRecord).filter(
+        ExerciseRecord.id == record_id,
+        ExerciseRecord.user_id == current_user.id
+    ).first()
+    if not record:
+        raise HTTPException(status_code=404, detail="运动记录不存在")
+    
+    # 检查是否有视频
+    if not record.video_url:
+        raise HTTPException(status_code=404, detail="该记录没有关联视频")
+    
+    # 构建文件路径
+    filename = record.video_url.split("/")[-1]  # 从路径提取文件名
+    file_path = os.path.join(UPLOAD_DIR, filename)  # 拼接完整路径
+    
+    # 删除文件
+    if os.path.exists(file_path):  # 检查文件是否存在
+        os.remove(file_path)  # 删除文件
+    
+    # 更新数据库
+    record.video_url = None  # 清空视频路径
+    db.commit()  # 提交事务
+    
+    return {"message": "视频已删除"}
+
+@router.get("/videos/{filename}")  # 定义 GET 路由，用于访问已上传的视频
+def get_video(
+    filename: str,  # 文件名，从 URL 路径获取
+    current_user: User = Depends(get_current_user)  # 需要登录才能访问（权限控制）
+):
+    file_path = os.path.join(UPLOAD_DIR, filename)  # 拼接完整文件路径
+    if not os.path.exists(file_path):  # 检查文件是否存在
+        raise HTTPException(status_code=404, detail="视频文件不存在")  # 抛出 404 错误
+    return FileResponse(file_path)  # 返回文件响应，FastAPI 会自动处理文件流
