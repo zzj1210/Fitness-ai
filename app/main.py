@@ -3,11 +3,21 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api import auth, exercise,stats,video
+from app.config import settings
 
 app = FastAPI(
-    title="体适能AI管家 API",
+    title="体适能 AI 管家 API",
     description="校园健康体适能检测与管理系统",
     version="1.0.0"
+)
+
+# 允许跨域（从环境变量读取）
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.allowed_origins_list,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # 允许跨域（开发环境）

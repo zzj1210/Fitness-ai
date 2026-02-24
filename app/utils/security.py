@@ -11,6 +11,21 @@ from app.models.user import User
 
 # ============ 密码加密 ============
 
+import bcrypt
+from datetime import datetime, timezone, timedelta
+from jose import JWTError, jwt
+from fastapi import Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer
+from sqlalchemy.orm import Session
+from app.database import get_db
+from app.models.user import User
+from app.config import settings
+
+# JWT 配置（从环境变量读取）
+SECRET_KEY = settings.SECRET_KEY
+ALGORITHM = settings.ALGORITHM
+ACCESS_TOKEN_EXPIRE_MINUTES = settings.ACCESS_TOKEN_EXPIRE_MINUTES
+
 def hash_password(password: str) -> str:
     """对密码进行加密"""
     salt = bcrypt.gensalt(rounds=12)
@@ -25,11 +40,6 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     )
 
 # ============ JWT 令牌 ============
-
-# JWT 配置
-SECRET_KEY = "your-secret-key-change-in-production-please-use-random-string"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 def create_access_token(data: dict, expires_delta: timedelta = None):
     """生成 JWT 令牌"""
