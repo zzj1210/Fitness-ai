@@ -1,6 +1,6 @@
 # E:\Fitness-ai-backend\app\schemas\exercise.py
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional, Dict, Any
 from datetime import datetime
 
@@ -26,8 +26,7 @@ class ExerciseRecordResponse(BaseModel):
     feedback: Optional[str]
     created_at: datetime
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # 标准动作响应
 class ExerciseResponse(BaseModel):
@@ -36,5 +35,4 @@ class ExerciseResponse(BaseModel):
     category: Optional[str]
     description: Optional[str]
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

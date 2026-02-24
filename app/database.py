@@ -1,8 +1,7 @@
 # E:\Fitness-ai-backend\app\database.py
 
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, declarative_base
 
 # 数据库连接 URL
 # 格式：postgresql://用户名:密码@主机:端口/数据库名

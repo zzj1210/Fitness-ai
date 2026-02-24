@@ -45,7 +45,7 @@ class TestRegister:
             "email": "new@example.com",
             "password": "123"
         })
-        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
     
     def test_register_password_no_letter(self, client, db_session):
         """测试密码没有字母"""
@@ -54,7 +54,7 @@ class TestRegister:
             "email": "new@example.com",
             "password": "12345678"
         })
-        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
     
     def test_register_password_no_digit(self, client, db_session):
         """测试密码没有数字"""
@@ -63,7 +63,7 @@ class TestRegister:
             "email": "new@example.com",
             "password": "abcdefgh"
         })
-        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
 
 
 class TestLogin:

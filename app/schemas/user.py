@@ -1,6 +1,6 @@
 # E:\Fitness-ai-backend\app\schemas\user.py
 
-from pydantic import BaseModel, EmailStr, field_validator
+from pydantic import BaseModel, EmailStr, field_validator, ConfigDict
 from typing import Optional
 from datetime import datetime
 import re
@@ -35,8 +35,7 @@ class UserResponse(BaseModel):
     is_active: bool
     created_at: datetime
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # Token 响应
 class Token(BaseModel):

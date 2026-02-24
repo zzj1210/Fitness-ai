@@ -9,7 +9,7 @@
 | 数据验证 | Pydantic | 2.12.5 |
 | Python 版本 | Python | 3.13.9 |
 
-### 项目结构（截至2.23）
+### 项目结构（截至2.24）
 ```
 .\Fitness-ai-backend\ 
 ├── app/
@@ -33,40 +33,57 @@
 │   └── utils/
 │       └── security.py      # 密码加密/JWT/认证
 ├── uploads
-│   └── videos/              # 上传视频存储   
+│   └── videos/              # 上传视频存储  
+├── tests/
+│   ├── conftest.py             # 测试配置
+│   ├── test_auth.py            # 认证测试
+│   ├── test_exercise.py        # 运动记录测试
+│   ├── test_stats.py           # 统计测试
+│   └── test_security.py        # 安全工具测试 
 ├── _init_db.py              # 数据库初始化脚本
 ├── seed_data.py             # 测试数据种子脚本
+├── .env.example             # 环境变量模板
 ├── requirements.txt         # 依赖列表
 ├── td.py                    # 数据库连接测试
+├── pytest.ini                  # pytest 配置
 └── .gitignore
 ```
 
 ### 从源码构建（开发者）
 ```
-
-#克隆仓库
+# 1. 克隆仓库
 git clone https://github.com/Acidmoon/Fitness-ai.git
 cd Fitness-ai
 
-# 创建虚拟环境
-python -m venv venv 
+# 2. 创建虚拟环境
+python -m venv venv
 
-# 激活虚拟环境，三选一
-venv\Scripts\Activate.ps1 # Powershell下激活虚拟环境
-venv\Scripts\activate.bat # cmd下激活
-source venv/bin/activate # mac/Linux下
+# 3. 激活虚拟环境 (Windows PowerShell)
+venv\Scripts\Activate.ps1
 
-# 安装依赖
+# 4. 安装依赖
 pip install -r requirements.txt
 
-# 初始化数据库
-python _init_db.py
 
-# 启动后端服务
+# 5. 配置环境变量
+copy .env.example .env
+# 生成安全密钥
+python -c "import secrets; print(secrets.token_hex(32))"
+
+# 编辑 .env 文件，填入实际配置
+
+# 6. 初始化数据库
+python _init_db.py
+python seed_data.py
+
+# 7. 启动服务
 uvicorn app.main:app --reload
 
 # 启动成功后服务端口在http://127.0.0.1:8000
-# http://127.0.0.1:8000/docs      Swagger UI，FastAPI的文档，可以测试接口
+# API 文档地址
+- Swagger UI: http://127.0.0.1:8000/docs
+- ReDoc: http://127.0.0.1:8000/redoc
+- OpenAPI JSON: http://127.0.0.1:8000/openapi.json
 # Ctrl C 结束服务
 
 

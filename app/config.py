@@ -1,6 +1,6 @@
 # E:\Fitness-ai-backend\app\config.py
 
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import List
 
 
@@ -16,8 +16,7 @@ class Settings(BaseSettings):
     # CORS 配置
     ALLOWED_ORIGINS: str = "http://localhost:3000,http://localhost:8080"
     
-    class Config:
-        env_file = ".env"
+    model_config = SettingsConfigDict(env_file=".env")
     
     @property
     def allowed_origins_list(self) -> List[str]:

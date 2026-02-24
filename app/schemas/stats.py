@@ -1,5 +1,5 @@
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import Optional, List, Dict
 from datetime import datetime
 
@@ -11,8 +11,7 @@ class ExerciseStats(BaseModel):
     best_score: float  # 最高得分
     total_duration: int  # 总时长 (秒)
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # 按动作分类统计
 class CategoryStats(BaseModel):
@@ -28,8 +27,7 @@ class RecentRecord(BaseModel):
     count: int
     created_at: datetime
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # 综合统计响应
 class StatsSummary(BaseModel):
