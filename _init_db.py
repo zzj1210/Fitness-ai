@@ -2,7 +2,7 @@
 
 from app.database import engine, Base
 
-# ⭐ 关键：必须导入所有模型，SQLAlchemy 才能创建对应的表
+# 关键：必须导入所有模型，SQLAlchemy 才能创建对应的表
 from app.models.user import User
 from app.models.exercise import Exercise, ExerciseRecord
 

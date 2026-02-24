@@ -1,4 +1,3 @@
-# E:\Fitness-ai-backend\app\schemas\stats.py
 
 from pydantic import BaseModel
 from typing import Optional, List, Dict
@@ -21,7 +20,7 @@ class CategoryStats(BaseModel):
     count: int
     average_score: float
 
-# 最近运动记录（用于趋势图）
+# 最近运动记录
 class RecentRecord(BaseModel):
     id: int
     exercise_name: str

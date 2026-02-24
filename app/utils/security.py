@@ -9,8 +9,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.user import User
 
-# ============ 密码加密 ============
-
+# 密码加密
 import bcrypt
 from datetime import datetime, timezone, timedelta
 from jose import JWTError, jwt
@@ -39,8 +38,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
         hashed_password.encode('utf-8')
     )
 
-# ============ JWT 令牌 ============
-
+# JWT 令牌
 def create_access_token(data: dict, expires_delta: timedelta = None):
     """生成 JWT 令牌"""
     to_encode = data.copy()
@@ -49,7 +47,7 @@ def create_access_token(data: dict, expires_delta: timedelta = None):
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
-# ============ 获取当前用户 ============
+#获取当前用户
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
