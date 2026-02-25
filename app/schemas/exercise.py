@@ -2,7 +2,7 @@
 
 from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional, Dict, Any
-from datetime import datetime
+from datetime import datetime, date
 
 # 创建运动记录请求
 class ExerciseRecordCreate(BaseModel):
@@ -36,3 +36,8 @@ class ExerciseResponse(BaseModel):
     description: Optional[str]
     
     model_config = ConfigDict(from_attributes=True)
+
+# 运动记录查询参数
+class ExerciseRecordQuery(BaseModel):
+    start_date: Optional[date] = None
+    end_date: Optional[date] = None

@@ -58,7 +58,6 @@ class TestExerciseRecords:
     
     def test_get_user_records(self, client, db_session, test_user):
         """测试获取用户记录"""
-        # 先创建一些测试记录
         from app.models.exercise import Exercise, ExerciseRecord
         exercise = Exercise(name="测试动作", category="上肢")
         db_session.add(exercise)
@@ -80,6 +79,51 @@ class TestExerciseRecords:
         data = response.json()
         assert isinstance(data, list)
         assert len(data) >= 1
+    
+    def test_get_user_records_with_date_range(self, client, db_session, test_user):
+        """测试日期范围过滤"""
+        from datetime import datetime, timedelta
+        from app.models.exercise import Exercise, ExerciseRecord
+        
+        exercise = Exercise(name="测试动作", category="上肢")
+        db_session.add(exercise)
+        db_session.commit()
+        
+        today = datetime.now().date()
+        
+        record1 = ExerciseRecord(
+            user_id=test_user["user"].id,
+            exercise_id=exercise.id,
+            score=80,
+            count=10,
+            duration=60,
+            created_at=datetime.now() - timedelta(days=2)
+        )
+        record2 = ExerciseRecord(
+            user_id=test_user["user"].id,
+            exercise_id=exercise.id,
+            score=85,
+            count=15,
+            duration=90,
+            created_at=datetime.now() - timedelta(days=1)
+        )
+        record3 = ExerciseRecord(
+            user_id=test_user["user"].id,
+            exercise_id=exercise.id,
+            score=90,
+            count=20,
+            duration=120,
+            created_at=datetime.now()
+        )
+        db_session.add_all([record1, record2, record3])
+        db_session.commit()
+        
+        headers = {"Authorization": f"Bearer {test_user['token']}"}
+        
+        # 只查询最近 1 天的记录
+        response = client.get(f"/api/exercise/records?start_date={today - timedelta(days=1)}", headers=headers)
+        assert response.status_code == status.HTTP_200_OK
+        assert len(response.json()) == 2
     
     def test_get_exercises(self, client, db_session):
         """测试获取标准动作列表（不需要认证）"""

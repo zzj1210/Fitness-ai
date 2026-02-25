@@ -1,12 +1,13 @@
 # E:\Fitness-ai-backend\app\api\exercise.py
 
+from datetime import date, datetime
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 from app.database import get_db
 from app.models.exercise import Exercise, ExerciseRecord
 from app.schemas.exercise import ExerciseRecordCreate, ExerciseRecordResponse, ExerciseResponse
-from app.utils.security import get_current_user  # 稍后创建
+from app.utils.security import get_current_user
 from app.models.user import User
 
 router = APIRouter()
@@ -18,12 +19,10 @@ def create_record(
     current_user: User = Depends(get_current_user)
 ):
     """创建运动记录"""
-    # 检查动作是否存在
     exercise = db.query(Exercise).filter(Exercise.id == record_data.exercise_id).first()
     if not exercise:
         raise HTTPException(status_code=404, detail="动作不存在")
     
-    # 创建记录
     db_record = ExerciseRecord(
         user_id=current_user.id,
         exercise_id=record_data.exercise_id,
@@ -42,15 +41,24 @@ def create_record(
 
 @router.get("/records", response_model=List[ExerciseRecordResponse])
 def get_user_records(
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None,
     skip: int = 0,
     limit: int = 20,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """获取用户运动记录"""
-    records = db.query(ExerciseRecord).filter(
+    """获取用户运动记录（支持日期范围过滤）"""
+    query = db.query(ExerciseRecord).filter(
         ExerciseRecord.user_id == current_user.id
-    ).order_by(ExerciseRecord.created_at.desc()).offset(skip).limit(limit).all()
+    )
+    
+    if start_date:
+        query = query.filter(ExerciseRecord.created_at >= datetime.combine(start_date, datetime.min.time()))
+    if end_date:
+        query = query.filter(ExerciseRecord.created_at <= datetime.combine(end_date, datetime.max.time()))
+    
+    records = query.order_by(ExerciseRecord.created_at.desc()).offset(skip).limit(limit).all()
     return records
 
 @router.get("/exercises", response_model=List[ExerciseResponse])
