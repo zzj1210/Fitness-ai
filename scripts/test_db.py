@@ -1,6 +1,7 @@
-# E:\Fitness-ai-backend\test_db.py
+# E:\Fitness-ai-backend\scripts\test_db.py
 
 from app.database import engine
+
 
 def test_connection():
     try:
@@ -12,6 +13,7 @@ def test_connection():
     except Exception as e:
         print(f"❌ 数据库连接失败：{e}")
         return False
+
 
 if __name__ == "__main__":
     test_connection()

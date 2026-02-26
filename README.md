@@ -58,10 +58,11 @@ Fitness-ai-backend/
 │   ├── test_exercise.py        # 运动记录测试
 │   ├── test_stats.py           # 统计功能测试
 │   └── test_security.py        # 安全工具测试
+├── scripts/
+│   ├── init_db.py              # 数据库初始化脚本
+│   ├── seed_data.py            # 测试数据种子脚本
+│   └── test_db.py              # 数据库连接测试
 ├── uploads/videos/             # 视频存储目录
-├── _init_db.py                 # 数据库初始化脚本
-├── seed_data.py                # 测试数据种子脚本
-├── td.py                       # 数据库连接测试
 ├── .env.example                # 环境变量模板
 ├── requirements.txt            # 依赖列表
 ├── pytest.ini                  # pytest 配置
@@ -148,8 +149,8 @@ ALLOWED_ORIGINS=http://localhost:3000,http://localhost:8080
 
 ### 6. 初始化数据库
 ```bash
-python _init_db.py
-python seed_data.py
+python scripts/init_db.py
+python scripts/seed_data.py
 ```
 
 ### 7. 启动服务
@@ -178,7 +179,23 @@ pytest tests/test_auth.py
 pytest --cov=app --cov-report=html
 ```
 
-当前测试状态：**8 个测试用例全部通过** ✅
+当前测试状态：**29 个测试用例全部通过** ✅
+
+---
+
+## 🛠 代码质量工具
+
+### 格式化代码
+```bash
+black app/ tests/
+```
+
+### 检查代码风格
+```bash
+flake8 app/ tests/
+```
+
+当前代码状态：**flake8 检查通过，0 错误** ✅
 
 ---
 
@@ -192,10 +209,11 @@ pytest --cov=app --cov-report=html
 - [x] 视频上传功能
 - [x] 日期范围过滤
 - [x] 动作 ID 过滤
-- [x] 测试体系建设（27 个测试用例）
+- [x] 测试体系建设（29 个测试用例）
+- [x] 代码质量工具集成（black, flake8）
 
 ### 待开发功能
-- [ ] 代码质量工具集成（black, flake8, mypy）
+- [ ] mypy 类型检查（可选，需要补充类型注解）
 
 ---
 
@@ -207,13 +225,13 @@ pytest --cov=app --cov-report=html
 python -c "import secrets; print(secrets.token_hex(32))"
 
 # 数据库连接测试
-python td.py
+python scripts/test_db.py
 
 # 初始化数据库
-python _init_db.py
+python scripts/init_db.py
 
 # 添加测试数据
-python seed_data.py
+python scripts/seed_data.py
 ```
 
 ---

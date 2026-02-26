@@ -8,7 +8,6 @@ from app.database import Base, get_db
 from app.main import app
 from app.utils.security import hash_password
 
-
 # 使用 SQLite 内存数据库进行测试（无需 PostgreSQL）
 SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
 
@@ -36,12 +35,13 @@ def db_session():
 @pytest.fixture(scope="function")
 def client(db_session):
     """创建测试客户端"""
+
     def override_get_db():
         try:
             yield db_session
         finally:
             pass
-    
+
     app.dependency_overrides[get_db] = override_get_db
     with TestClient(app) as test_client:
         yield test_client
@@ -52,21 +52,20 @@ def client(db_session):
 def test_user(client, db_session):
     """创建测试用户并返回认证 token"""
     from app.models.user import User
-    
+
     user = User(
         username="testuser",
         email="test@example.com",
         password_hash=hash_password("password123"),
-        is_active=True
+        is_active=True,
     )
     db_session.add(user)
     db_session.commit()
-    
+
     # 登录获取 token
-    response = client.post("/api/auth/login", data={
-        "username": "testuser",
-        "password": "password123"
-    })
+    response = client.post(
+        "/api/auth/login", data={"username": "testuser", "password": "password123"}
+    )
     token = response.json()["access_token"]
     return {"token": token, "user": user}
 
@@ -76,6 +75,7 @@ def test_user(client, db_session):
 def event_loop():
     """创建事件循环"""
     import asyncio
+
     loop = asyncio.get_event_loop_policy().new_event_loop()
     yield loop
     loop.close()

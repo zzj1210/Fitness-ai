@@ -16,6 +16,7 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 # 创建基类（用于定义数据模型）
 Base = declarative_base()
 
+
 # 获取数据库会话的依赖函数（供 API 接口使用）
 def get_db():
     db = SessionLocal()

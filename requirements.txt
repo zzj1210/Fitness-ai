@@ -28,3 +28,7 @@ pytest>=8.0.0
 pytest-asyncio>=0.23.0
 httpx==0.26.0
 pytest-cov==4.1.0
+
+# 代码质量工具
+black>=24.0.0
+flake8>=7.0.0

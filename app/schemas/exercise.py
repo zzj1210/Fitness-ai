@@ -4,6 +4,7 @@ from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional, Dict, Any
 from datetime import datetime, date
 
+
 # 创建运动记录请求
 class ExerciseRecordCreate(BaseModel):
     exercise_id: int
@@ -15,6 +16,7 @@ class ExerciseRecordCreate(BaseModel):
     keypoints_data: Optional[Dict[str, Any]] = None
     feedback: Optional[str] = None
 
+
 # 运动记录响应
 class ExerciseRecordResponse(BaseModel):
     id: int
@@ -25,8 +27,9 @@ class ExerciseRecordResponse(BaseModel):
     heart_rate_avg: Optional[float]
     feedback: Optional[str]
     created_at: datetime
-    
+
     model_config = ConfigDict(from_attributes=True)
+
 
 # 标准动作响应
 class ExerciseResponse(BaseModel):
@@ -34,8 +37,9 @@ class ExerciseResponse(BaseModel):
     name: str
     category: Optional[str]
     description: Optional[str]
-    
+
     model_config = ConfigDict(from_attributes=True)
+
 
 # 运动记录查询参数
 class ExerciseRecordQuery(BaseModel):
