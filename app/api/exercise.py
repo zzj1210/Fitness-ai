@@ -43,12 +43,13 @@ def create_record(
 def get_user_records(
     start_date: Optional[date] = None,
     end_date: Optional[date] = None,
+    exercise_id: Optional[int] = None,
     skip: int = 0,
     limit: int = 20,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """获取用户运动记录（支持日期范围过滤）"""
+    """获取用户运动记录（支持日期范围、动作 ID 过滤）"""
     query = db.query(ExerciseRecord).filter(
         ExerciseRecord.user_id == current_user.id
     )
@@ -57,6 +58,8 @@ def get_user_records(
         query = query.filter(ExerciseRecord.created_at >= datetime.combine(start_date, datetime.min.time()))
     if end_date:
         query = query.filter(ExerciseRecord.created_at <= datetime.combine(end_date, datetime.max.time()))
+    if exercise_id:
+        query = query.filter(ExerciseRecord.exercise_id == exercise_id)
     
     records = query.order_by(ExerciseRecord.created_at.desc()).offset(skip).limit(limit).all()
     return records

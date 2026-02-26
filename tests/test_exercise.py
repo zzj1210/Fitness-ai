@@ -125,6 +125,43 @@ class TestExerciseRecords:
         assert response.status_code == status.HTTP_200_OK
         assert len(response.json()) == 2
     
+    def test_get_user_records_with_exercise_id_filter(self, client, db_session, test_user):
+        """测试动作 ID 过滤"""
+        from app.models.exercise import Exercise, ExerciseRecord
+        
+        # 创建两个不同的动作
+        exercise1 = Exercise(name="俯卧撑", category="上肢")
+        exercise2 = Exercise(name="深蹲", category="下肢")
+        db_session.add_all([exercise1, exercise2])
+        db_session.commit()
+        
+        # 创建不同动作的记录
+        record1 = ExerciseRecord(
+            user_id=test_user["user"].id,
+            exercise_id=exercise1.id,
+            score=80,
+            count=10,
+            duration=60
+        )
+        record2 = ExerciseRecord(
+            user_id=test_user["user"].id,
+            exercise_id=exercise2.id,
+            score=85,
+            count=15,
+            duration=90
+        )
+        db_session.add_all([record1, record2])
+        db_session.commit()
+        
+        headers = {"Authorization": f"Bearer {test_user['token']}"}
+        
+        # 只查询 exercise1 的记录
+        response = client.get(f"/api/exercise/records?exercise_id={exercise1.id}", headers=headers)
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert len(data) == 1
+        assert data[0]["exercise_id"] == exercise1.id
+    
     def test_get_exercises(self, client, db_session):
         """测试获取标准动作列表（不需要认证）"""
         # 先创建测试动作
