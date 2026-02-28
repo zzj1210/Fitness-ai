@@ -149,8 +149,8 @@ ALLOWED_ORIGINS=http://localhost:3000,http://localhost:8080
 
 ### 6. 初始化数据库
 ```bash
-python scripts/init_db.py
-python scripts/seed_data.py
+python -m scripts.init_db
+python -m scripts.seed_data
 ```
 
 ### 7. 启动服务
@@ -228,13 +228,13 @@ flake8 app/ tests/
 python -c "import secrets; print(secrets.token_hex(32))"
 
 # 数据库连接测试
-python scripts/test_db.py
+python -m scripts.test_db
 
 # 初始化数据库
-python scripts/init_db.py
+python -m scripts.init_db
 
 # 添加测试数据
-python scripts/seed_data.py
+python -m scripts.seed_data
 ```
 
 ---
