@@ -38,12 +38,17 @@ Fitness-ai-backend/
 │   ├── main.py                 # FastAPI 应用入口
 │   ├── config.py               # 配置文件 (环境变量)
 │   ├── database.py             # 数据库连接
+│   ├── logging_config.py       # 日志系统配置 ⭐ 新增
+│   ├── exceptions.py           # 异常处理 ⭐ 新增
 │   ├── api/
 │   │   ├── auth.py             # 认证接口 (注册/登录)
 │   │   ├── exercise.py         # 运动接口 (动作库/记录)
 │   │   ├── stats.py            # 数据统计接口
-│   │   ├── user.py             # 用户资料管理 
+│   │   ├── user.py             # 用户资料管理 (新增)
 │   │   └── video.py            # 视频上传接口
+│   ├── middleware/
+│   │   ├── __init__.py         # 中间件模块 ⭐ 新增
+│   │   └── logging_middleware.py # 请求日志中间件 ⭐ 新增
 │   ├── models/
 │   │   ├── __init__.py         # 模型导出
 │   │   ├── user.py             # 用户数据模型
@@ -54,19 +59,23 @@ Fitness-ai-backend/
 │   │   ├── exercise.py         # 运动数据验证
 │   │   └── stats.py            # 数据统计模型
 │   └── utils/
+│       ├── sanitizer.py        # 敏感信息脱敏 ⭐ 新增
 │       └── security.py         # 密码加密/JWT/认证
 ├── tests/
 │   ├── conftest.py             # 测试配置
 │   ├── test_auth.py            # 认证模块测试
 │   ├── test_exercise.py        # 运动记录测试
 │   ├── test_stats.py           # 统计功能测试
-│   ├── test_user.py            # 用户模块测试 
+│   ├── test_user.py            # 用户模块测试 (新增)
 │   └── test_video.py           # 视频模块测试
 ├── scripts/
 │   ├── init_db.py              # 数据库初始化脚本
 │   ├── seed_data.py            # 测试数据种子脚本
 │   └── test_db.py              # 数据库连接测试
+├── logs/                       # 日志目录 ⭐ 新增
+│   └── app.log                 # 应用日志文件
 ├── uploads/videos/             # 视频存储目录
+├── .env                        # 环境变量配置 (不上传)
 ├── .env.example                # 环境变量模板
 ├── .flake8                     # flake8 配置
 ├── .gitignore                  # Git 忽略规则
@@ -194,7 +203,7 @@ pytest --cov=app --cov-report=html
 ```
 
 当前测试状态：**52 个测试用例全部通过** ✅
-测试覆盖率：**95%**
+测试覆盖率：**90%**
 
 ---
 
@@ -214,6 +223,41 @@ flake8 app/ tests/
 
 ---
 
+## 📝 日志系统
+
+### 日志配置
+日志系统使用 `loguru` 库，支持自动轮转和敏感信息脱敏。
+
+**日志文件位置**: `logs/app.log`
+
+**日志轮转策略**:
+- 单个文件最大：10MB
+- 保留时间：7 天
+- 自动压缩备份文件
+
+**敏感信息脱敏**:
+- 密码：`***`
+- 邮箱：`t***@example.com`
+- Token: `eyJ***...`
+- IP 地址：`192.168.1.***`
+
+**查看日志**:
+```bash
+# 实时查看日志
+tail -f logs/app.log
+
+# 查看最近的日志
+cat logs/app.log | tail -n 100
+```
+
+**日志级别配置** (`.env` 文件):
+```bash
+LOG_LEVEL=INFO  # DEBUG, INFO, WARNING, ERROR
+LOG_FORMAT=text  # 或 json（生产环境）
+```
+
+---
+
 ## 📌 开发进度
 
 ### 已完成功能
@@ -228,6 +272,7 @@ flake8 app/ tests/
 - [x] 测试体系建设（52 个测试用例）
 - [x] 代码质量工具集成（black, flake8）
 - [x] 视频模块测试（11 个测试用例，覆盖率 95%）
+- [x] 日志系统 ⭐ 新增（敏感信息脱敏、请求日志、异常处理）
 
 ### 待开发功能
 - [ ] mypy 类型检查（可选，需要补充类型注解）

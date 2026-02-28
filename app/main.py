@@ -1,14 +1,40 @@
 # E:\Fitness-ai-backend\app\main.py
 
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api import auth, exercise, stats, video, user
+from app.logging_config import setup_logging
+from app.middleware.logging_middleware import LoggingMiddleware
+from app.exceptions import register_exception_handlers
+from loguru import logger
+
+# 设置日志系统
+setup_logging()
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """应用生命周期管理"""
+    # 启动事件
+    logger.info("🚀 应用启动中...")
+    yield
+    # 关闭事件
+    logger.info("👋 应用关闭中...")
+
 
 app = FastAPI(
     title="体适能 AI 管家 API",
     description="校园健康体适能检测与管理系统",
     version="1.0.0",
+    lifespan=lifespan,
 )
+
+# 添加日志中间件
+app.add_middleware(LoggingMiddleware)
+
+# 注册异常处理器
+register_exception_handlers(app)
 
 # 允许跨域（开发环境：允许所有来源）
 app.add_middleware(

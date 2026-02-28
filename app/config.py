@@ -16,6 +16,13 @@ class Settings(BaseSettings):
     # CORS 配置
     ALLOWED_ORIGINS: str = "http://localhost:3000,http://localhost:8080"
 
+    # 日志配置
+    LOG_LEVEL: str = "INFO"
+    LOG_FILE: str = "logs/app.log"
+    LOG_ROTATION: str = "10 MB"
+    LOG_RETENTION: str = "7 days"
+    LOG_FORMAT: str = "text"
+
     model_config = SettingsConfigDict(env_file=".env")
 
     @property

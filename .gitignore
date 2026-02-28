@@ -28,9 +28,9 @@ Thumbs.db
 
 # 环境变量文件（可能包含敏感信息）
 .env
-
+logs/
 DEV/
-
+.coverage
 nul
 
 
