@@ -275,6 +275,69 @@ LOG_FORMAT=text  # 或 json（生产环境）
 
 ---
 
+## 💾 数据库说明
+
+### 添加新数据模型
+
+当需要添加新的数据模型（表）时，请按以下步骤操作：
+
+**步骤 1**: 创建模型文件
+
+在 `app/models/` 目录下创建新的模型文件，例如 `app/models/article.py`：
+
+```python
+# app/models/article.py
+
+from app.database import Base
+from sqlalchemy import Column, Integer, String, Text, DateTime
+from datetime import datetime, timezone
+
+class Article(Base):
+    """文章数据模型"""
+    
+    __tablename__ = "articles"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String(200), nullable=False)
+    content = Column(Text)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+```
+
+**步骤 2**: 在 `app/models/__init__.py` 中注册
+
+编辑 `app/models/__init__.py`，添加新模型的导入：
+
+```python
+from app.models.user import User
+from app.models.exercise import Exercise, ExerciseRecord
+from app.models.article import Article  # 新增这一行
+
+__all__ = ["User", "Exercise", "ExerciseRecord", "Article"] # 添加
+```
+
+**步骤 3**: 初始化数据库表
+
+运行以下命令创建新表：
+
+```bash
+python -m scripts.init_db
+```
+
+**步骤 4**: （可选）添加测试数据
+
+如果需要初始数据，编辑 `scripts/seed_data.py` 添加种子数据。
+
+---
+
+### 注意事项
+
+1. **必须注册模型**: 新模型必须在 `app/models/__init__.py` 中导入，否则表不会被创建
+2. **继承 Base 类**: 所有模型必须继承 `Base` 类
+3. **定义 `__tablename__`**: 每个模型必须定义 `__tablename__` 属性
+4. **外键关系**: 如果有外键关系，使用 SQLAlchemy 的 `ForeignKey` 和 `relationship`
+
+---
+
 ## 📎 附录
 
 ### 关键命令
