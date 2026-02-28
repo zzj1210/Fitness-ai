@@ -42,11 +42,14 @@ Fitness-ai-backend/
 │   │   ├── auth.py             # 认证接口 (注册/登录)
 │   │   ├── exercise.py         # 运动接口 (动作库/记录)
 │   │   ├── stats.py            # 数据统计接口
+│   │   ├── user.py             # 用户资料管理 
 │   │   └── video.py            # 视频上传接口
 │   ├── models/
+│   │   ├── __init__.py         # 模型导出
 │   │   ├── user.py             # 用户数据模型
 │   │   └── exercise.py         # 运动数据模型
 │   ├── schemas/
+│   │   ├── __init__.py         # Schema 导出
 │   │   ├── user.py             # 用户数据验证
 │   │   ├── exercise.py         # 运动数据验证
 │   │   └── stats.py            # 数据统计模型
@@ -57,16 +60,19 @@ Fitness-ai-backend/
 │   ├── test_auth.py            # 认证模块测试
 │   ├── test_exercise.py        # 运动记录测试
 │   ├── test_stats.py           # 统计功能测试
-│   └── test_security.py        # 安全工具测试
+│   ├── test_user.py            # 用户模块测试 
+│   └── test_video.py           # 视频模块测试
 ├── scripts/
 │   ├── init_db.py              # 数据库初始化脚本
 │   ├── seed_data.py            # 测试数据种子脚本
 │   └── test_db.py              # 数据库连接测试
 ├── uploads/videos/             # 视频存储目录
 ├── .env.example                # 环境变量模板
-├── requirements.txt            # 依赖列表
+├── .flake8                     # flake8 配置
+├── .gitignore                  # Git 忽略规则
 ├── pytest.ini                  # pytest 配置
-└── .gitignore
+├── requirements.txt            # 依赖列表
+└── README.md                   # 项目文档
 ```
 
 ---
@@ -99,6 +105,14 @@ Fitness-ai-backend/
 | POST | `/records/{record_id}/video` | 上传视频 | ✅ |
 | DELETE | `/records/{record_id}/video` | 删除视频 | ✅ |
 | GET | `/videos/{filename}` | 访问视频 | ❌ |
+
+### 用户模块 `/api/user`
+| 方法 | 路由 | 说明 | 认证 |
+|------|------|------|------|
+| GET | `/profile` | 获取个人资料 | ✅ |
+| PUT | `/profile` | 更新个人资料 | ✅ |
+| PUT | `/password` | 修改密码 | ✅ |
+| DELETE | `/account` | 注销账户（硬删除） | ✅ |
 
 ---
 
@@ -173,13 +187,14 @@ uvicorn app.main:app --reload
 pytest
 
 # 运行特定模块
-pytest tests/test_auth.py
+pytest -m tests.test_auth
 
 # 生成覆盖率报告
 pytest --cov=app --cov-report=html
 ```
 
-当前测试状态：**40 个测试用例全部通过** ✅
+当前测试状态：**52 个测试用例全部通过** ✅
+测试覆盖率：**95%**
 
 ---
 
@@ -197,21 +212,20 @@ flake8 app/ tests/
 
 当前代码状态：**flake8 检查通过，0 错误** ✅
 
-测试覆盖率：**96%** （视频模块 95%）
-
 ---
 
 ## 📌 开发进度
 
 ### 已完成功能
 - [x] 用户认证（注册/登录）
+- [x] 用户资料管理（获取/更新/修改密码/注销）⭐ 新增
 - [x] 运动记录管理（创建/查询）
 - [x] 标准动作库
 - [x] 数据统计接口
 - [x] 视频上传功能
 - [x] 日期范围过滤
 - [x] 动作 ID 过滤
-- [x] 测试体系建设（40 个测试用例）
+- [x] 测试体系建设（52 个测试用例）
 - [x] 代码质量工具集成（black, flake8）
 - [x] 视频模块测试（11 个测试用例，覆盖率 95%）
 

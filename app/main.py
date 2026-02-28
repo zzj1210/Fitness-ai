@@ -2,7 +2,7 @@
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api import auth, exercise, stats, video
+from app.api import auth, exercise, stats, video, user
 
 app = FastAPI(
     title="体适能 AI 管家 API",
@@ -24,6 +24,7 @@ app.include_router(auth.router, prefix="/api/auth", tags=["认证"])
 app.include_router(exercise.router, prefix="/api/exercise", tags=["运动"])
 app.include_router(stats.router, prefix="/api/stats", tags=["统计"])
 app.include_router(video.router, prefix="/api/video", tags=["视频"])
+app.include_router(user.router, prefix="/api/user", tags=["用户"])
 
 
 @app.get("/")
