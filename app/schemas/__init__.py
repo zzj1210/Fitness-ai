@@ -5,6 +5,8 @@ from app.schemas.exercise import (
     ExerciseRecordCreate,
     ExerciseRecordResponse,
     ExerciseResponse,
+    ExerciseRecordUpdate,
+    ExerciseRecordQuery,
 )
 from app.schemas.stats import ExerciseStats, CategoryStats, RecentRecord, StatsSummary
 
@@ -16,6 +18,8 @@ __all__ = [
     "ExerciseRecordCreate",
     "ExerciseRecordResponse",
     "ExerciseResponse",
+    "ExerciseRecordUpdate",
+    "ExerciseRecordQuery",
     "ExerciseStats",
     "CategoryStats",
     "RecentRecord",

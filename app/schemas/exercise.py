@@ -45,3 +45,15 @@ class ExerciseResponse(BaseModel):
 class ExerciseRecordQuery(BaseModel):
     start_date: Optional[date] = None
     end_date: Optional[date] = None
+    exercise_id: Optional[int] = None
+
+
+# 更新运动记录请求
+class ExerciseRecordUpdate(BaseModel):
+    score: Optional[float] = Field(None, ge=0, le=100, description="动作评分 0-100")
+    count: Optional[int] = Field(None, ge=0, description="完成次数")
+    duration: Optional[int] = Field(None, ge=0, description="时长 (秒)")
+    heart_rate_avg: Optional[float] = None
+    heart_rate_max: Optional[float] = None
+    keypoints_data: Optional[Dict[str, Any]] = None
+    feedback: Optional[str] = None

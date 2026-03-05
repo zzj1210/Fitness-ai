@@ -180,3 +180,231 @@ class TestExerciseRecords:
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert isinstance(data, list)
+
+    def test_update_record_requires_auth(self, client, db_session):
+        """测试修改记录需要认证"""
+        response = client.put("/api/exercise/records/1", json={"score": 90})
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+    def test_update_record_success(self, client, db_session, test_user):
+        """测试修改记录成功"""
+        from app.models.exercise import Exercise, ExerciseRecord
+
+        exercise = Exercise(name="测试动作", category="上肢")
+        db_session.add(exercise)
+        db_session.commit()
+
+        record = ExerciseRecord(
+            user_id=test_user["user"].id,
+            exercise_id=exercise.id,
+            score=80,
+            count=10,
+            duration=60,
+        )
+        db_session.add(record)
+        db_session.commit()
+
+        headers = {"Authorization": f"Bearer {test_user['token']}"}
+        response = client.put(
+            f"/api/exercise/records/{record.id}",
+            json={"score": 95},
+            headers=headers,
+        )
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["score"] == 95
+        assert data["count"] == 10  # 其他字段不变
+
+    def test_update_record_not_found(self, client, db_session, test_user):
+        """测试修改不存在的记录"""
+        headers = {"Authorization": f"Bearer {test_user['token']}"}
+        response = client.put(
+            "/api/exercise/records/999",
+            json={"score": 90},
+            headers=headers,
+        )
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    def test_update_record_forbidden(self, client, db_session, test_user):
+        """测试不能修改其他用户的记录"""
+        from app.models.exercise import Exercise, ExerciseRecord
+        from app.models.user import User
+
+        # 创建另一个用户
+        other_user = User(
+            username="other_user",
+            email="other@example.com",
+            password_hash="hashed",
+            is_active=True,
+        )
+        db_session.add(other_user)
+        db_session.commit()
+
+        exercise = Exercise(name="测试动作", category="上肢")
+        db_session.add(exercise)
+        db_session.commit()
+
+        # 创建其他用户的记录
+        record = ExerciseRecord(
+            user_id=other_user.id,
+            exercise_id=exercise.id,
+            score=80,
+            count=10,
+            duration=60,
+        )
+        db_session.add(record)
+        db_session.commit()
+
+        headers = {"Authorization": f"Bearer {test_user['token']}"}
+        response = client.put(
+            f"/api/exercise/records/{record.id}",
+            json={"score": 90},
+            headers=headers,
+        )
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    def test_delete_record_requires_auth(self, client, db_session):
+        """测试删除记录需要认证"""
+        response = client.delete("/api/exercise/records/1")
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+    def test_delete_record_success(self, client, db_session, test_user):
+        """测试删除记录成功"""
+        from app.models.exercise import Exercise, ExerciseRecord
+
+        exercise = Exercise(name="测试动作", category="上肢")
+        db_session.add(exercise)
+        db_session.commit()
+
+        record = ExerciseRecord(
+            user_id=test_user["user"].id,
+            exercise_id=exercise.id,
+            score=80,
+            count=10,
+            duration=60,
+        )
+        db_session.add(record)
+        db_session.commit()
+
+        headers = {"Authorization": f"Bearer {test_user['token']}"}
+        response = client.delete(
+            f"/api/exercise/records/{record.id}",
+            headers=headers,
+        )
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json()["message"] == "删除成功"
+
+        # 验证记录已被删除
+        deleted_record = (
+            db_session.query(ExerciseRecord).filter_by(id=record.id).first()
+        )
+        assert deleted_record is None
+
+    def test_delete_record_not_found(self, client, db_session, test_user):
+        """测试删除不存在的记录"""
+        headers = {"Authorization": f"Bearer {test_user['token']}"}
+        response = client.delete(
+            "/api/exercise/records/999",
+            headers=headers,
+        )
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    def test_batch_delete_records_requires_auth(self, client, db_session):
+        """测试批量删除需要认证"""
+        response = client.delete("/api/exercise/records?record_ids=1&record_ids=2")
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+    def test_batch_delete_records_success(self, client, db_session, test_user):
+        """测试批量删除成功"""
+        from app.models.exercise import Exercise, ExerciseRecord
+
+        exercise = Exercise(name="测试动作", category="上肢")
+        db_session.add(exercise)
+        db_session.commit()
+
+        # 创建多条记录
+        records = [
+            ExerciseRecord(
+                user_id=test_user["user"].id,
+                exercise_id=exercise.id,
+                score=80 + i,
+                count=10 + i,
+                duration=60 + i,
+            )
+            for i in range(3)
+        ]
+        db_session.add_all(records)
+        db_session.commit()
+
+        record_ids = [r.id for r in records]
+
+        headers = {"Authorization": f"Bearer {test_user['token']}"}
+        response = client.delete(
+            f"/api/exercise/records?"
+            f"record_ids={record_ids[0]}&"
+            f"record_ids={record_ids[1]}&"
+            f"record_ids={record_ids[2]}",
+            headers=headers,
+        )
+        assert response.status_code == status.HTTP_200_OK
+        assert f"成功删除 {len(record_ids)} 条记录" in response.json()["message"]
+
+        # 验证记录已被删除
+        remaining = (
+            db_session.query(ExerciseRecord)
+            .filter(ExerciseRecord.id.in_(record_ids))
+            .all()
+        )
+        assert len(remaining) == 0
+
+    def test_batch_delete_partial_success(self, client, db_session, test_user):
+        """测试批量删除部分记录（包含其他用户的记录）"""
+        from app.models.exercise import Exercise, ExerciseRecord
+        from app.models.user import User
+
+        # 创建另一个用户
+        other_user = User(
+            username="other_user2",
+            email="other2@example.com",
+            password_hash="hashed",
+            is_active=True,
+        )
+        db_session.add(other_user)
+        db_session.commit()
+
+        exercise = Exercise(name="测试动作", category="上肢")
+        db_session.add(exercise)
+        db_session.commit()
+
+        # 创建当前用户的记录
+        record1 = ExerciseRecord(
+            user_id=test_user["user"].id,
+            exercise_id=exercise.id,
+            score=80,
+            count=10,
+            duration=60,
+        )
+        db_session.add(record1)
+
+        # 创建其他用户的记录
+        record2 = ExerciseRecord(
+            user_id=other_user.id,
+            exercise_id=exercise.id,
+            score=85,
+            count=15,
+            duration=90,
+        )
+        db_session.add(record2)
+        db_session.commit()
+
+        headers = {"Authorization": f"Bearer {test_user['token']}"}
+        # 尝试删除两条记录（其中一条属于其他用户）
+        response = client.delete(
+            f"/api/exercise/records?record_ids={record1.id}&record_ids={record2.id}",
+            headers=headers,
+        )
+        assert response.status_code == status.HTTP_200_OK
+
+        # 只删除了当前用户的记录
+        remaining = db_session.query(ExerciseRecord).filter_by(id=record2.id).first()
+        assert remaining is not None

@@ -1,7 +1,7 @@
 # E:\Fitness-ai-backend\app\api\exercise.py
 
 from datetime import date, datetime
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from app.database import get_db
@@ -10,6 +10,7 @@ from app.schemas.exercise import (
     ExerciseRecordCreate,
     ExerciseRecordResponse,
     ExerciseResponse,
+    ExerciseRecordUpdate,
 )
 from app.utils.security import get_current_user
 from app.models.user import User
@@ -81,3 +82,69 @@ def get_exercises(db: Session = Depends(get_db)):
     """获取标准动作列表"""
     exercises = db.query(Exercise).all()
     return exercises
+
+
+@router.put("/records/{record_id}", response_model=ExerciseRecordResponse)
+def update_record(
+    record_id: int,
+    record_data: ExerciseRecordUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """修改运动记录"""
+    db_record = (
+        db.query(ExerciseRecord)
+        .filter(
+            ExerciseRecord.id == record_id, ExerciseRecord.user_id == current_user.id
+        )
+        .first()
+    )
+    if not db_record:
+        raise HTTPException(status_code=404, detail="记录不存在")
+
+    # 只更新提供的字段
+    update_data = record_data.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(db_record, field, value)
+
+    db.commit()
+    db.refresh(db_record)
+    return db_record
+
+
+@router.delete("/records/{record_id}")
+def delete_record(
+    record_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """删除运动记录"""
+    db_record = (
+        db.query(ExerciseRecord)
+        .filter(
+            ExerciseRecord.id == record_id, ExerciseRecord.user_id == current_user.id
+        )
+        .first()
+    )
+    if not db_record:
+        raise HTTPException(status_code=404, detail="记录不存在")
+
+    db.delete(db_record)
+    db.commit()
+    return {"message": "删除成功"}
+
+
+@router.delete("/records")
+def batch_delete_records(
+    record_ids: List[int] = Query(..., description="要删除的记录 ID 列表"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """批量删除运动记录"""
+    db.query(ExerciseRecord).filter(
+        ExerciseRecord.id.in_(record_ids),
+        ExerciseRecord.user_id == current_user.id,
+    ).delete(synchronize_session=False)
+
+    db.commit()
+    return {"message": f"成功删除 {len(record_ids)} 条记录"}
