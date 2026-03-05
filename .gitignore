@@ -32,7 +32,7 @@ logs/
 DEV/
 .coverage
 nul
-.cowork-temp
+.cowork-temp/
 
 
 
