@@ -4,13 +4,10 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api import auth, exercise, stats, video, user
-from app.logging_config import setup_logging
 from app.middleware.logging_middleware import LoggingMiddleware
 from app.exceptions import register_exception_handlers
+from app.config import settings
 from loguru import logger
-
-# 设置日志系统
-setup_logging()
 
 
 @asynccontextmanager
@@ -36,10 +33,10 @@ app.add_middleware(LoggingMiddleware)
 # 注册异常处理器
 register_exception_handlers(app)
 
-# 允许跨域（开发环境：允许所有来源）
+# 允许跨域（从环境变量读取配置）
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=settings.allowed_origins_list,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -55,7 +52,7 @@ app.include_router(user.router, prefix="/api/user", tags=["用户"])
 
 @app.get("/")
 def root():
-    return {"message": "欢迎使用体适能AI管家 API", "version": "1.0.0"}
+    return {"message": "欢迎使用体适能 AI 管家 API", "version": "1.0.0"}
 
 
 @app.get("/health")

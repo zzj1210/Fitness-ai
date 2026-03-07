@@ -6,7 +6,7 @@ from typing import List
 
 class Settings(BaseSettings):
     # 数据库
-    DATABASE_URL: str = "postgresql://acidmoon:132456758@localhost:5432/fitness_ai"
+    DATABASE_URL: str = "postgresql://user:password@localhost:5432/fitness_ai"
 
     # JWT 配置
     SECRET_KEY: str = "your-secret-key-change-in-production"

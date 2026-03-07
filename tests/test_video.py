@@ -14,11 +14,7 @@ class TestVideoUpload:
         db_session.commit()
 
         record = ExerciseRecord(
-            user_id=1,
-            exercise_id=exercise.id,
-            score=80,
-            count=10,
-            duration=60
+            user_id=1, exercise_id=exercise.id, score=80, count=10, duration=60
         )
         db_session.add(record)
         db_session.commit()
@@ -41,7 +37,7 @@ class TestVideoUpload:
             exercise_id=exercise.id,
             score=80,
             count=10,
-            duration=60
+            duration=60,
         )
         db_session.add(record)
         db_session.commit()
@@ -57,11 +53,11 @@ class TestVideoUpload:
         headers = {"Authorization": f"Bearer {test_user['token']}"}
 
         # Patch UPLOAD_DIR
-        with patch('app.api.video.UPLOAD_DIR', str(upload_dir)):
+        with patch("app.api.video.UPLOAD_DIR", str(upload_dir)):
             response = client.post(
                 f"/api/video/records/{record.id}/video",
                 headers=headers,
-                files={"video": ("test.mp4", video_content, "video/mp4")}
+                files={"video": ("test.mp4", video_content, "video/mp4")},
             )
 
         assert response.status_code == status.HTTP_200_OK
@@ -83,7 +79,7 @@ class TestVideoUpload:
             exercise_id=exercise.id,
             score=80,
             count=10,
-            duration=60
+            duration=60,
         )
         db_session.add(record)
         db_session.commit()
@@ -97,17 +93,19 @@ class TestVideoUpload:
 
         headers = {"Authorization": f"Bearer {test_user['token']}"}
 
-        with patch('app.api.video.UPLOAD_DIR', str(upload_dir)):
+        with patch("app.api.video.UPLOAD_DIR", str(upload_dir)):
             response = client.post(
                 f"/api/video/records/{record.id}/video",
                 headers=headers,
-                files={"video": ("test.txt", txt_content, "text/plain")}
+                files={"video": ("test.txt", txt_content, "text/plain")},
             )
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert "不支持的视频格式" in response.json()["detail"]
 
-    def test_upload_video_record_not_found(self, client, db_session, test_user, tmp_path):
+    def test_upload_video_record_not_found(
+        self, client, db_session, test_user, tmp_path
+    ):
         """测试运动记录不存在"""
         from unittest.mock import patch
 
@@ -119,11 +117,11 @@ class TestVideoUpload:
 
         headers = {"Authorization": f"Bearer {test_user['token']}"}
 
-        with patch('app.api.video.UPLOAD_DIR', str(upload_dir)):
+        with patch("app.api.video.UPLOAD_DIR", str(upload_dir)):
             response = client.post(
                 "/api/video/records/9999/video",
                 headers=headers,
-                files={"video": ("test.mp4", video_content, "video/mp4")}
+                files={"video": ("test.mp4", video_content, "video/mp4")},
             )
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
@@ -143,7 +141,7 @@ class TestVideoUpload:
             exercise_id=exercise.id,
             score=80,
             count=10,
-            duration=60
+            duration=60,
         )
         db_session.add(record)
         db_session.commit()
@@ -156,11 +154,11 @@ class TestVideoUpload:
 
         headers = {"Authorization": f"Bearer {test_user['token']}"}
 
-        with patch('app.api.video.UPLOAD_DIR', str(upload_dir)):
+        with patch("app.api.video.UPLOAD_DIR", str(upload_dir)):
             response = client.post(
                 f"/api/video/records/{record.id}/video",
                 headers=headers,
-                files={"video": ("test.mp4", video_content, "video/mp4")}
+                files={"video": ("test.mp4", video_content, "video/mp4")},
             )
 
         assert response.status_code == status.HTTP_200_OK
@@ -168,6 +166,98 @@ class TestVideoUpload:
         # 默认 keep_video=True，所以 video_deleted 应该为 False
         assert data["video_deleted"] is False
         assert "永久存储" in data["note"]
+
+    def test_upload_video_keep_video_false(
+        self, client, db_session, test_user, tmp_path
+    ):
+        """测试 keep_video=False 时真正删除临时文件"""
+        from app.models.exercise import Exercise, ExerciseRecord
+        from unittest.mock import patch
+
+        exercise = Exercise(name="测试动作", category="上肢")
+        db_session.add(exercise)
+        db_session.commit()
+
+        record = ExerciseRecord(
+            user_id=test_user["user"].id,
+            exercise_id=exercise.id,
+            score=80,
+            count=10,
+            duration=60,
+        )
+        db_session.add(record)
+        db_session.commit()
+
+        upload_dir = tmp_path / "videos"
+        upload_dir.mkdir()
+
+        video_content = BytesIO(b"fake video content")
+        video_content.name = "test.mp4"
+
+        headers = {"Authorization": f"Bearer {test_user['token']}"}
+
+        with patch("app.api.video.UPLOAD_DIR", str(upload_dir)):
+            response = client.post(
+                f"/api/video/records/{record.id}/video?keep_video=false",
+                headers=headers,
+                files={"video": ("test.mp4", video_content, "video/mp4")},
+            )
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        # keep_video=False，视频应该被删除
+        assert data["video_deleted"] is True
+        assert data["video_url"] is None
+        assert "临时分析" in data["note"]
+        # 验证文件确实被删除了
+        assert not (upload_dir / "test.mp4").exists()
+
+    def test_upload_video_keep_video_true_explicit(
+        self, client, db_session, test_user, tmp_path
+    ):
+        """测试 keep_video=True 时保留文件"""
+        from app.models.exercise import Exercise, ExerciseRecord
+        from unittest.mock import patch
+        import os
+
+        exercise = Exercise(name="测试动作", category="上肢")
+        db_session.add(exercise)
+        db_session.commit()
+
+        record = ExerciseRecord(
+            user_id=test_user["user"].id,
+            exercise_id=exercise.id,
+            score=80,
+            count=10,
+            duration=60,
+        )
+        db_session.add(record)
+        db_session.commit()
+
+        upload_dir = tmp_path / "videos"
+        upload_dir.mkdir()
+
+        video_content = BytesIO(b"fake video content")
+        video_content.name = "test.mp4"
+
+        headers = {"Authorization": f"Bearer {test_user['token']}"}
+
+        with patch("app.api.video.UPLOAD_DIR", str(upload_dir)):
+            response = client.post(
+                f"/api/video/records/{record.id}/video?keep_video=true",
+                headers=headers,
+                files={"video": ("test.mp4", video_content, "video/mp4")},
+            )
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        # keep_video=True，视频应该保留
+        assert data["video_deleted"] is False
+        assert data["video_url"] is not None
+        assert "永久存储" in data["note"]
+        # 验证文件确实存在（通过 video_url 查找）
+        filename = data["video_url"].split("/")[-1]
+        assert os.path.exists(upload_dir / filename)
 
 
 class TestVideoDelete:
@@ -187,7 +277,7 @@ class TestVideoDelete:
             score=80,
             count=10,
             duration=60,
-            video_url="/videos/test.mp4"
+            video_url="/videos/test.mp4",
         )
         db_session.add(record)
         db_session.commit()
@@ -217,15 +307,17 @@ class TestVideoDelete:
             score=80,
             count=10,
             duration=60,
-            video_url="/videos/test.mp4"
+            video_url="/videos/test.mp4",
         )
         db_session.add(record)
         db_session.commit()
 
         headers = {"Authorization": f"Bearer {test_user['token']}"}
 
-        with patch('app.api.video.UPLOAD_DIR', str(upload_dir)):
-            response = client.delete(f"/api/video/records/{record.id}/video", headers=headers)
+        with patch("app.api.video.UPLOAD_DIR", str(upload_dir)):
+            response = client.delete(
+                f"/api/video/records/{record.id}/video", headers=headers
+            )
 
         assert response.status_code == status.HTTP_200_OK
         assert response.json()["message"] == "视频已删除"
@@ -248,13 +340,15 @@ class TestVideoDelete:
             score=80,
             count=10,
             duration=60,
-            video_url=None
+            video_url=None,
         )
         db_session.add(record)
         db_session.commit()
 
         headers = {"Authorization": f"Bearer {test_user['token']}"}
-        response = client.delete(f"/api/video/records/{record.id}/video", headers=headers)
+        response = client.delete(
+            f"/api/video/records/{record.id}/video", headers=headers
+        )
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
         assert "该记录没有关联视频" in response.json()["detail"]
@@ -285,7 +379,7 @@ class TestVideoAccess:
 
         headers = {"Authorization": f"Bearer {test_user['token']}"}
 
-        with patch('app.api.video.UPLOAD_DIR', str(upload_dir)):
+        with patch("app.api.video.UPLOAD_DIR", str(upload_dir)):
             response = client.get("/api/video/videos/nonexistent.mp4", headers=headers)
 
         assert response.status_code == status.HTTP_404_NOT_FOUND

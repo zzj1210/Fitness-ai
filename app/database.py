@@ -2,10 +2,11 @@
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
+from app.config import settings
 
 # 数据库连接 URL
-# 格式：postgresql://用户名:密码@主机:端口/数据库名
-DATABASE_URL = "postgresql://acidmoon:132456758@localhost:5432/fitness_ai"
+# 格式：postgresql://用户名：密码@主机：端口/数据库名
+DATABASE_URL = settings.DATABASE_URL
 
 # 创建引擎
 engine = create_engine(DATABASE_URL)

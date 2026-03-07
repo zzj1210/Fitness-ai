@@ -68,8 +68,13 @@ def upload_video(  # 定义上传视频函数
         video_deleted = False  # 标记视频未删除
     else:  # 不保留视频（临时处理）
         video_deleted = True  # 标记视频已删除
-        # 注意：这里先不删除，等 AI 分析完成后再删除
-        # 或者立即删除，只返回分析结果
+        # 立即删除临时文件
+        try:
+            os.remove(file_path)
+        except OSError:
+            # 文件删除失败也继续，反正不会存储路径
+            pass
+        record.video_url = None  # 不存储视频路径
 
     db.commit()  # 提交数据库事务，保存更改
     db.refresh(record)  # 刷新记录对象，获取最新数据
@@ -128,7 +133,19 @@ def get_video(
     filename: str,  # 文件名，从 URL 路径获取
     current_user: User = Depends(get_current_user),  # 需要登录才能访问（权限控制）
 ):
+    # 安全防护：防止路径穿越攻击
+    # 只允许纯文件名，不能包含路径分隔符或向上跳转
+    if not filename or ".." in filename or "/" in filename or "\\" in filename:
+        raise HTTPException(status_code=400, detail="非法的文件名")
+
     file_path = os.path.join(UPLOAD_DIR, filename)  # 拼接完整文件路径
+
+    # 二次检查：确保解析后的路径在 UPLOAD_DIR 内
+    real_path = os.path.realpath(file_path)
+    real_upload_dir = os.path.realpath(UPLOAD_DIR)
+    if not real_path.startswith(real_upload_dir + os.sep):
+        raise HTTPException(status_code=403, detail="禁止访问该文件")
+
     if not os.path.exists(file_path):  # 检查文件是否存在
         raise HTTPException(status_code=404, detail="视频文件不存在")  # 抛出 404 错误
     return FileResponse(file_path)  # 返回文件响应，FastAPI 会自动处理文件流

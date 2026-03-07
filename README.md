@@ -113,9 +113,9 @@ Fitness-ai-backend/
 ### 视频模块 `/api/video`
 | 方法 | 路由 | 说明 | 认证 |
 |------|------|------|------|
-| POST | `/records/{record_id}/video` | 上传视频 | ✅ |
+| POST | `/records/{record_id}/video` | 上传视频（支持 `keep_video` 参数） | ✅ |
 | DELETE | `/records/{record_id}/video` | 删除视频 | ✅ |
-| GET | `/videos/{filename}` | 访问视频 | ❌ |
+| GET | `/videos/{filename}` | 访问视频（路径穿越防护） | ✅ |
 
 ### 用户模块 `/api/user`
 | 方法 | 路由 | 说明 | 认证 |
@@ -170,7 +170,14 @@ SECRET_KEY=your-random-secret-key-here
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=30
 ALLOWED_ORIGINS=http://localhost:3000,http://localhost:8080
+LOG_LEVEL=INFO
+LOG_FORMAT=text
 ```
+
+**安全提示**：
+- 不要使用默认的数据库连接字符串
+- `SECRET_KEY` 必须使用随机生成的 32 字节密钥
+- 生产环境 `ALLOWED_ORIGINS` 应设置为具体域名，不要用 `*`
 
 ### 6. 初始化数据库
 ```bash
@@ -204,8 +211,8 @@ pytest -m tests.test_auth
 pytest --cov=app --cov-report=html
 ```
 
-当前测试状态：**62 个测试用例全部通过**
-测试覆盖率：**91%**
+当前测试状态：**64 个测试用例全部通过**
+测试覆盖率：**88%**
 
 ---
 
@@ -265,16 +272,16 @@ LOG_FORMAT=text  # 或 json（生产环境）
 ### 已完成功能
 - [x] 用户认证（注册/登录）
 - [x] 用户资料管理（获取/更新/修改密码/注销）
-- [x] 运动记录管理（创建/查询/修改/删除/批量删除）⭐ 新增
+- [x] 运动记录管理（创建/查询/修改/删除/批量删除）
 - [x] 标准动作库
 - [x] 数据统计接口
 - [x] 视频上传功能
 - [x] 日期范围过滤
 - [x] 动作 ID 过滤
-- [x] 测试体系建设（62 个测试用例）⭐ 新增
+- [x] 测试体系建设（64 个测试用例）
 - [x] 代码质量工具集成（black, flake8）
-- [x] 视频模块测试（11 个测试用例，覆盖率 95%）
 - [x] 日志系统（敏感信息脱敏、请求日志、异常处理）
+- [x] 安全修复（配置集中管理、路径穿越防护、CORS 环境配置）
 
 ---
 
