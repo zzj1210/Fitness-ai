@@ -12,7 +12,7 @@ from app.utils.security import get_current_user
 router = APIRouter()
 
 
-@router.get("/stats/summary", response_model=StatsSummary)
+@router.get("/summary", response_model=StatsSummary)
 def get_stats_summary(
     db: Session = Depends(get_db), current_user: User = Depends(get_current_user)
 ):
@@ -95,7 +95,7 @@ def get_stats_summary(
     )
 
 
-@router.get("/stats/weekly", response_model=List[Dict])
+@router.get("/weekly", response_model=List[Dict])
 def get_weekly_stats(
     db: Session = Depends(get_db), current_user: User = Depends(get_current_user)
 ):
@@ -128,7 +128,7 @@ def get_weekly_stats(
     ]
 
 
-@router.get("/stats/personal-best")
+@router.get("/personal-best")
 def get_personal_best(
     db: Session = Depends(get_db), current_user: User = Depends(get_current_user)
 ):

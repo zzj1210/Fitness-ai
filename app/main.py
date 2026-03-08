@@ -1,22 +1,23 @@
-# E:\Fitness-ai-backend\app\main.py
-
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api import auth, exercise, stats, video, user
-from app.middleware.logging_middleware import LoggingMiddleware
-from app.exceptions import register_exception_handlers
-from app.config import settings
 from loguru import logger
+
+from app.api import auth, exercise, stats, user, video
+from app.config import settings
+from app.exceptions import register_exception_handlers
+from app.logging_config import setup_logging
+from app.middleware.logging_middleware import LoggingMiddleware
+
+# 初始化日志系统（控制台 + 文件轮转）
+setup_logging()
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """应用生命周期管理"""
-    # 启动事件
     logger.info("🚀 应用启动中...")
     yield
-    # 关闭事件
     logger.info("👋 应用关闭中...")
 
 

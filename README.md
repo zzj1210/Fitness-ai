@@ -1,4 +1,4 @@
-# Fitness-ai Backend
+﻿# Fitness-ai Backend
 
 校园健康体适能检测与管理系统的后端服务，基于 FastAPI 构建，提供用户认证、运动记录管理、数据统计和视频上传等功能。
 
@@ -200,19 +200,63 @@ uvicorn app.main:app --reload
 
 ## 🧪 运行测试
 
+### 基本命令
+
 ```bash
 # 运行所有测试
 pytest
 
 # 运行特定模块
-pytest -m tests.test_auth
+pytest tests/test_auth.py
+
+# 运行特定测试类
+pytest tests/test_auth.py::TestRegister
+
+# 运行特定测试方法
+pytest tests/test_auth.py::TestRegister::test_register_success
+
+# 按关键字过滤测试
+pytest -k "register"
 
 # 生成覆盖率报告
 pytest --cov=app --cov-report=html
+
+# 清除 pytest 缓存（如遇缓存问题）
+pytest --cache-clear
 ```
 
-当前测试状态：**64 个测试用例全部通过**
-测试覆盖率：**88%**
+### 常见错误
+
+```bash
+# ❌ 错误用法
+pytest -m tests.test_auth    # 0 测试被选中（-m 用于 marker 过滤，不是文件路径）
+
+# ✅ 正确用法
+pytest tests/test_auth.py    # 运行该文件的所有测试
+```
+
+### Windows 环境常见问题（venv 解释器失效）
+
+如果激活虚拟环境后仍报错：`did not find executable ... WindowsApps ... python.exe`，说明 `venv` 绑定的基础解释器已失效。处理方式：
+
+```bash
+# 1) 删除并重建虚拟环境（示例）
+rmdir /s /q venv
+python -m venv venv
+venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+```
+
+### 说明
+
+| 参数 | 含义 | 示例 |
+|------|------|------|
+| 直接指定文件 | 运行指定文件的测试 | `pytest tests/test_auth.py` |
+| `-k` | 按关键字过滤测试 | `pytest -k "login"` |
+| `-m` | 按 marker 标记过滤（需先定义） | `pytest -m slow` |
+
+当前测试状态：**仓库含 65 个测试用例（建议以本机 pytest 实测结果为准）**
+测试覆盖率：**90%（2026-03-09 本地实测）**
 
 ---
 
@@ -368,3 +412,4 @@ python -m scripts.seed_data
 ---
 
 **文档维护**: 请在每次重大更新后同步更新此文档
+

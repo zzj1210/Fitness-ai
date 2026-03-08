@@ -51,8 +51,10 @@ def get_user_records(
     start_date: Optional[date] = None,
     end_date: Optional[date] = None,
     exercise_id: Optional[int] = None,
-    skip: int = 0,
-    limit: int = 20,
+    skip: int = Query(default=0, ge=0, description="跳过的记录数"),
+    limit: int = Query(
+        default=20, ge=1, le=100, description="返回的记录数，范围 1-100"
+    ),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -141,10 +143,28 @@ def batch_delete_records(
     current_user: User = Depends(get_current_user),
 ):
     """批量删除运动记录"""
-    db.query(ExerciseRecord).filter(
-        ExerciseRecord.id.in_(record_ids),
-        ExerciseRecord.user_id == current_user.id,
-    ).delete(synchronize_session=False)
+    # 先查询属于当前用户的记录
+    user_record_ids = {
+        r.id
+        for r in db.query(ExerciseRecord.id)
+        .filter(
+            ExerciseRecord.id.in_(record_ids),
+            ExerciseRecord.user_id == current_user.id,
+        )
+        .all()
+    }
+
+    # 只删除属于当前用户的记录
+    deleted_count = (
+        db.query(ExerciseRecord)
+        .filter(
+            ExerciseRecord.id.in_(user_record_ids),
+        )
+        .delete(synchronize_session=False)
+    )
 
     db.commit()
-    return {"message": f"成功删除 {len(record_ids)} 条记录"}
+    return {
+        "message": f"成功删除 {deleted_count} 条记录",
+        "deleted_count": deleted_count,
+    }

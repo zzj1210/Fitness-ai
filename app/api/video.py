@@ -131,6 +131,7 @@ def delete_video(
 @router.get("/videos/{filename}")  # 定义 GET 路由，用于访问已上传的视频
 def get_video(
     filename: str,  # 文件名，从 URL 路径获取
+    db: Session = Depends(get_db),  # 数据库会话
     current_user: User = Depends(get_current_user),  # 需要登录才能访问（权限控制）
 ):
     # 安全防护：防止路径穿越攻击
@@ -146,6 +147,19 @@ def get_video(
     if not real_path.startswith(real_upload_dir + os.sep):
         raise HTTPException(status_code=403, detail="禁止访问该文件")
 
+    # 资源归属校验：只能访问自己记录关联的视频
+    record = (
+        db.query(ExerciseRecord)
+        .filter(
+            ExerciseRecord.user_id == current_user.id,
+            ExerciseRecord.video_url == f"/videos/{filename}",
+        )
+        .first()
+    )
+    if not record:
+        raise HTTPException(status_code=404, detail="视频文件不存在")
+
     if not os.path.exists(file_path):  # 检查文件是否存在
         raise HTTPException(status_code=404, detail="视频文件不存在")  # 抛出 404 错误
     return FileResponse(file_path)  # 返回文件响应，FastAPI 会自动处理文件流
+

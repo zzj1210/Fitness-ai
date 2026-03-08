@@ -1,4 +1,4 @@
-from fastapi import status
+﻿from fastapi import status
 
 
 class TestGetProfile:
@@ -88,7 +88,7 @@ class TestUpdateProfile:
             "/api/user/profile", headers=headers, json={"email": "invalid-email"}
         )
 
-        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
 
 
 class TestChangePassword:
@@ -127,7 +127,7 @@ class TestChangePassword:
             json={"old_password": "testpass123", "new_password": "123"},
         )
 
-        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
 
 
 class TestDeleteAccount:
@@ -173,3 +173,4 @@ class TestDeleteAccount:
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert "密码错误" in response.json()["detail"]
+

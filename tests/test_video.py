@@ -209,8 +209,8 @@ class TestVideoUpload:
         assert data["video_deleted"] is True
         assert data["video_url"] is None
         assert "临时分析" in data["note"]
-        # 验证文件确实被删除了
-        assert not (upload_dir / "test.mp4").exists()
+        # 目录应为空，说明临时文件已删除
+        assert len(list(upload_dir.iterdir())) == 0
 
     def test_upload_video_keep_video_true_explicit(
         self, client, db_session, test_user, tmp_path
@@ -381,6 +381,49 @@ class TestVideoAccess:
 
         with patch("app.api.video.UPLOAD_DIR", str(upload_dir)):
             response = client.get("/api/video/videos/nonexistent.mp4", headers=headers)
+
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        assert "视频文件不存在" in response.json()["detail"]
+
+    def test_get_video_forbidden_other_user(self, client, db_session, test_user, tmp_path):
+        """测试不能访问其他用户的视频"""
+        from app.models.exercise import Exercise, ExerciseRecord
+        from app.models.user import User
+        from app.utils.security import hash_password
+        from unittest.mock import patch
+
+        other_user = User(
+            username="video_owner",
+            email="video_owner@example.com",
+            password_hash=hash_password("password123"),
+            is_active=True,
+        )
+        db_session.add(other_user)
+        db_session.commit()
+
+        exercise = Exercise(name="测试动作", category="上肢")
+        db_session.add(exercise)
+        db_session.commit()
+
+        upload_dir = tmp_path / "videos"
+        upload_dir.mkdir()
+        filename = "owner_video.mp4"
+        (upload_dir / filename).write_bytes(b"fake video content")
+
+        record = ExerciseRecord(
+            user_id=other_user.id,
+            exercise_id=exercise.id,
+            score=80,
+            count=10,
+            duration=60,
+            video_url=f"/videos/{filename}",
+        )
+        db_session.add(record)
+        db_session.commit()
+
+        headers = {"Authorization": f"Bearer {test_user['token']}"}
+        with patch("app.api.video.UPLOAD_DIR", str(upload_dir)):
+            response = client.get(f"/api/video/videos/{filename}", headers=headers)
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
         assert "视频文件不存在" in response.json()["detail"]

@@ -6,7 +6,7 @@ class TestStats:
 
     def test_get_stats_summary_requires_auth(self, client, db_session):
         """测试获取统计摘要需要认证"""
-        response = client.get("/api/stats/stats/summary")
+        response = client.get("/api/stats/summary")
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
     def test_get_stats_summary(self, client, db_session, test_user):
@@ -29,7 +29,7 @@ class TestStats:
         db_session.commit()
 
         headers = {"Authorization": f"Bearer {test_user['token']}"}
-        response = client.get("/api/stats/stats/summary", headers=headers)
+        response = client.get("/api/stats/summary", headers=headers)
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert "exercise_stats" in data
@@ -38,26 +38,26 @@ class TestStats:
 
     def test_get_weekly_stats_requires_auth(self, client, db_session):
         """测试获取周统计需要认证"""
-        response = client.get("/api/stats/stats/weekly")
+        response = client.get("/api/stats/weekly")
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
     def test_get_weekly_stats(self, client, db_session, test_user):
         """测试获取周统计"""
         headers = {"Authorization": f"Bearer {test_user['token']}"}
-        response = client.get("/api/stats/stats/weekly", headers=headers)
+        response = client.get("/api/stats/weekly", headers=headers)
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert isinstance(data, list)
 
     def test_get_personal_best_requires_auth(self, client, db_session):
         """测试获取个人最佳需要认证"""
-        response = client.get("/api/stats/stats/personal-best")
+        response = client.get("/api/stats/personal-best")
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
     def test_get_personal_best(self, client, db_session, test_user):
         """测试获取个人最佳"""
         headers = {"Authorization": f"Bearer {test_user['token']}"}
-        response = client.get("/api/stats/stats/personal-best", headers=headers)
+        response = client.get("/api/stats/personal-best", headers=headers)
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert isinstance(data, list)
