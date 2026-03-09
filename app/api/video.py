@@ -162,4 +162,3 @@ def get_video(
     if not os.path.exists(file_path):  # 检查文件是否存在
         raise HTTPException(status_code=404, detail="视频文件不存在")  # 抛出 404 错误
     return FileResponse(file_path)  # 返回文件响应，FastAPI 会自动处理文件流
-

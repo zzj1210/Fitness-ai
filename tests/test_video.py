@@ -385,7 +385,9 @@ class TestVideoAccess:
         assert response.status_code == status.HTTP_404_NOT_FOUND
         assert "视频文件不存在" in response.json()["detail"]
 
-    def test_get_video_forbidden_other_user(self, client, db_session, test_user, tmp_path):
+    def test_get_video_forbidden_other_user(
+        self, client, db_session, test_user, tmp_path
+    ):
         """测试不能访问其他用户的视频"""
         from app.models.exercise import Exercise, ExerciseRecord
         from app.models.user import User

@@ -1,4 +1,4 @@
-﻿# Fitness-ai Backend
+# Fitness-ai Backend
 
 校园健康体适能检测与管理系统的后端服务，基于 FastAPI 构建，提供用户认证、运动记录管理、数据统计和视频上传等功能。
 

@@ -1,4 +1,6 @@
 from app.utils.security import hash_password, verify_password, create_access_token
+from jose import jwt
+from app.config import settings
 
 
 class TestPasswordHashing:
@@ -28,7 +30,6 @@ class TestPasswordHashing:
         hashed1 = hash_password(password)
         hashed2 = hash_password(password)
         assert hashed1 != hashed2
-        # 但都能验证通过
         assert verify_password(password, hashed1) is True
         assert verify_password(password, hashed2) is True
 
@@ -47,3 +48,21 @@ class TestCreateAccessToken:
         token1 = create_access_token({"sub": "user1"})
         token2 = create_access_token({"sub": "user2"})
         assert token1 != token2
+
+    def test_create_access_token_with_user_id(self):
+        """测试使用 user_id 创建令牌"""
+        user_id = 123
+        token = create_access_token({"sub": str(user_id)})
+        assert isinstance(token, str)
+        payload = jwt.decode(
+            token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
+        )
+        assert payload["sub"] == str(user_id)
+
+    def test_token_sub_is_string(self):
+        """测试 token sub 是字符串类型"""
+        token = create_access_token({"sub": str(42)})
+        payload = jwt.decode(
+            token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
+        )
+        assert isinstance(payload["sub"], str)

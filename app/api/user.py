@@ -1,6 +1,7 @@
 # E:\Fitness-ai-backend\app\api\user.py
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.user import User
@@ -68,8 +69,14 @@ def update_profile(
             )
         current_user.email = profile_data.email
 
-    db.commit()
-    db.refresh(current_user)
+    try:
+        db.commit()
+        db.refresh(current_user)
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="用户名或邮箱已被使用"
+        )
 
     return current_user
 
@@ -81,19 +88,16 @@ def change_password(
     db: Session = Depends(get_db),
 ):
     """修改当前用户密码"""
-    # 检查账户是否被注销
     if not current_user.is_active:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="账户已被注销"
         )
 
-    # 验证原密码
     if not verify_password(password_data.old_password, current_user.password_hash):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="原密码错误"
         )
 
-    # 更新密码
     current_user.password_hash = hash_password(password_data.new_password)
     db.commit()
 
@@ -107,14 +111,12 @@ def delete_account(
     db: Session = Depends(get_db),
 ):
     """注销当前账户（硬删除）"""
-    # 验证密码确认
     if delete_data.password is not None:
         if not verify_password(delete_data.password, current_user.password_hash):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST, detail="密码错误"
             )
 
-    # 硬删除用户
     db.delete(current_user)
     db.commit()
 

@@ -1,4 +1,7 @@
 from fastapi import status
+from jose import jwt
+from app.config import settings
+from app.utils.security import create_access_token
 
 
 class TestRegister:
@@ -78,6 +81,54 @@ class TestRegister:
         )
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
 
+    def test_register_username_too_short(self, client, db_session):
+        """测试用户名太短"""
+        response = client.post(
+            "/api/auth/register",
+            json={
+                "username": "ab",
+                "email": "new@example.com",
+                "password": "password123",
+            },
+        )
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
+
+    def test_register_username_too_long(self, client, db_session):
+        """测试用户名太长"""
+        response = client.post(
+            "/api/auth/register",
+            json={
+                "username": "a" * 51,
+                "email": "new@example.com",
+                "password": "password123",
+            },
+        )
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
+
+    def test_register_username_invalid_chars(self, client, db_session):
+        """测试用户名包含非法字符"""
+        response = client.post(
+            "/api/auth/register",
+            json={
+                "username": "new user!",
+                "email": "new@example.com",
+                "password": "password123",
+            },
+        )
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
+
+    def test_register_invalid_email(self, client, db_session):
+        """测试邮箱格式无效"""
+        response = client.post(
+            "/api/auth/register",
+            json={
+                "username": "newuser",
+                "email": "invalid-email",
+                "password": "password123",
+            },
+        )
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
+
 
 class TestLogin:
     """用户登录测试"""
@@ -107,3 +158,32 @@ class TestLogin:
             data={"username": "nonexistent", "password": "password123"},
         )
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+    def test_login_token_uses_user_id(self, client, db_session, test_user):
+        """测试登录 token 使用 user.id 作为 sub"""
+        response = client.post(
+            "/api/auth/login", data={"username": "testuser", "password": "password123"}
+        )
+        assert response.status_code == status.HTTP_200_OK
+        token = response.json()["access_token"]
+        payload = jwt.decode(
+            token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
+        )
+        assert payload["sub"] == str(test_user["user"].id)
+        assert payload["sub"].isdigit()
+
+    def test_token_migration_supports_both_id_and_username(
+        self, client, db_session, test_user
+    ):
+        """测试平滑迁移：同时支持 id 和 username 的 token"""
+        # 使用 id 创建 token（新格式）
+        token_with_id = create_access_token({"sub": str(test_user["user"].id)})
+        headers_id = {"Authorization": f"Bearer {token_with_id}"}
+        response_id = client.get("/api/user/profile", headers=headers_id)
+        assert response_id.status_code == status.HTTP_200_OK
+
+        # 使用 username 创建 token（旧格式，兼容）
+        token_with_username = create_access_token({"sub": test_user["user"].username})
+        headers_username = {"Authorization": f"Bearer {token_with_username}"}
+        response_username = client.get("/api/user/profile", headers=headers_username)
+        assert response_username.status_code == status.HTTP_200_OK

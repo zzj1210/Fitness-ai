@@ -173,4 +173,3 @@ class TestDeleteAccount:
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert "密码错误" in response.json()["detail"]
-
